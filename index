@@ -1,0 +1,305 @@
+import React, { useState, useEffect, useMemo } from 'react';
+import { 
+  BookOpen, 
+  Target, 
+  Lightbulb, 
+  Calendar, 
+  Plus, 
+  ChevronRight, 
+  Award, 
+  BarChart3,
+  ExternalLink,
+  Camera,
+  LayoutGrid,
+  ArrowRight,
+  Globe,
+  User
+} from 'lucide-react';
+
+// --- Data & Constants ---
+
+const JOB_ROLES = [
+  {
+    id: 'iot-dev',
+    name: 'IoT 시스템 개발자',
+    skills: ['임베디드', '네트워크', 'C/C++', '센서제어'],
+    certs: ['정보처리기사', '전자계산기제어산업기사'],
+    desc: 'SDG 9: 사물인터넷 기술로 지능형 인프라를 구축하여 산업 효율을 높입니다.',
+    link: 'https://www.saramin.co.kr/zf_user/search?searchword=IoT+개발'
+  },
+  {
+    id: 'pcb-design',
+    name: '회로 설계 및 PCB 엔지니어',
+    skills: ['회로이론', 'Altium/OrCAD', '전자부품이해'],
+    certs: ['전자계산기기사', '전자기기기능사'],
+    desc: '지속 가능한 기술 혁신을 통해 탄력적인 산업 기반을 마련합니다.',
+    link: 'https://www.saramin.co.kr/zf_user/search?searchword=회로설계'
+  }
+];
+
+const SKILLS_LIST = ['임베디드', '회로이론', '네트워크', 'C/C++', '센서제어', 'PLC 제어', 'Altium/OrCAD', 'Python'];
+
+const CALENDAR_EVENTS = [
+  { date: '2026-03-05', title: '제1회 정기 기사 필기 접수', org: 'Q-Net' },
+  { date: '2026-03-20', title: '컴퓨터활용능력 상시시험', org: '상공회의소' }
+];
+
+const MISSIONS = [
+  {
+    id: 1,
+    title: '지속 가능한 스마트 시티 인프라',
+    desc: '에너지 효율을 극대화하는 스마트 가로등 제어 시스템을 설계하세요.',
+    difficulty: '중급',
+    points: 500
+  }
+];
+
+// --- Sub-Components ---
+
+const RadarChart = ({ data }) => {
+  return (
+    <div className="flex flex-col gap-2 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+      <h4 className="text-[10px] font-black text-slate-400 mb-2 uppercase tracking-widest">Skill Balance Index</h4>
+      {Object.entries(data).map(([skill, value]) => (
+        <div key={skill} className="flex items-center gap-3">
+          <span className="text-[11px] font-bold w-20 truncate text-slate-600">{skill}</span>
+          <div className="flex-1 h-1.5 bg-slate-200 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-blue-600 transition-all duration-500" 
+              style={{ width: `${value}%` }}
+            ></div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+// --- Main App Component ---
+
+export default function App() {
+  const [activeTab, setActiveTab] = useState('home');
+  // 초기 학습 기록 리스트를 비워두거나 실제 작동하는 데이터만 남깁니다.
+  const [posts, setPosts] = useState([]); 
+  const [mySkills, setMySkills] = useState(['임베디드', 'C/C++']);
+  const [newPost, setNewPost] = useState({ title: '', content: '' });
+
+  const toggleSkill = (skill) => {
+    setMySkills(prev => prev.includes(skill) ? prev.filter(s => s !== skill) : [...prev, skill]);
+  };
+
+  const careerAnalysis = useMemo(() => {
+    return JOB_ROLES.map(role => {
+      const matchCount = role.skills.filter(s => mySkills.includes(s)).length;
+      const percent = Math.round((matchCount / role.skills.length) * 100);
+      return { ...role, matchPercent: percent };
+    }).sort((a, b) => b.matchPercent - a.matchPercent);
+  }, [mySkills]);
+
+  const skillData = useMemo(() => {
+    const data = {};
+    SKILLS_LIST.forEach(s => {
+      data[s] = mySkills.includes(s) ? 80 + Math.random() * 20 : 20 + Math.random() * 10;
+    });
+    return data;
+  }, [mySkills]);
+
+  return (
+    <div className="min-h-screen bg-white text-slate-900 pb-24 font-sans">
+      {/* Header */}
+      <header className="px-6 py-6 flex justify-between items-center border-b border-slate-50">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <div className="w-5 h-5 bg-amber-500 rounded-md flex items-center justify-center">
+              <Globe size={12} className="text-white" />
+            </div>
+            <span className="text-[10px] font-black text-amber-600 tracking-tighter uppercase">SDGs Prosperous Future</span>
+          </div>
+          <h1 className="text-2xl font-black text-slate-800 tracking-tight italic">Smart-E <span className="text-blue-600">2026</span></h1>
+        </div>
+        <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center border border-slate-200">
+          <User size={20} className="text-slate-400" />
+        </div>
+      </header>
+
+      <main className="max-w-md mx-auto p-6">
+        
+        {/* TAB 1: DASHBOARD */}
+        {activeTab === 'home' && (
+          <div className="space-y-8 animate-in fade-in duration-500">
+            {/* Prosperity Message */}
+            <section className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-[32px] p-6 text-white shadow-xl shadow-blue-100">
+              <h2 className="text-lg font-bold mb-1">모두를 위한 번영 (Prosperity)</h2>
+              <p className="text-xs opacity-80 leading-relaxed mb-4">
+                기술 혁신(SDG 9)을 통해 포용적이고 지속 가능한 산업화를 추진하여 경제적 번영에 기여합니다.
+              </p>
+              <div className="bg-white/10 p-3 rounded-2xl flex items-center justify-between">
+                <span className="text-[10px] font-bold">나의 기술 공헌도</span>
+                <span className="text-xs font-black">Level 4</span>
+              </div>
+            </section>
+
+            {/* Core Services Grid */}
+            <section className="grid grid-cols-2 gap-4">
+              {[
+                { id: 'upload', icon: BookOpen, label: '학습기록', color: 'bg-blue-50 text-blue-600' },
+                { id: 'career', icon: Target, label: '진로분석', color: 'bg-indigo-50 text-indigo-600' },
+                { id: 'mission', icon: Lightbulb, label: '챌린지', color: 'bg-amber-50 text-amber-600' },
+                { id: 'calendar', icon: Calendar, label: '일정', color: 'bg-slate-50 text-slate-600' }
+              ].map(item => {
+                const Icon = item.icon;
+                return (
+                  <button 
+                    key={item.id}
+                    onClick={() => setActiveTab(item.id)}
+                    className="bg-white p-5 rounded-[28px] border border-slate-100 flex flex-col items-center gap-3 hover:border-blue-200 transition active:scale-95"
+                  >
+                    <div className={`w-12 h-12 rounded-2xl ${item.color} flex items-center justify-center`}>
+                      <Icon size={24} />
+                    </div>
+                    <span className="text-sm font-black text-slate-700">{item.label}</span>
+                  </button>
+                );
+              })}
+            </section>
+
+            {/* Simple Recent Feed */}
+            <section>
+              <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 px-1">Recent Activity</h3>
+              <div className="space-y-3">
+                {posts.length > 0 ? (
+                  posts.map(post => (
+                    <div key={post.id} className="bg-slate-50 p-4 rounded-2xl flex justify-between items-center group cursor-pointer hover:bg-slate-100 transition">
+                      <div>
+                        <h4 className="text-sm font-bold text-slate-800">{post.title}</h4>
+                        <p className="text-[10px] text-slate-400 mt-0.5">{post.date} · {post.tags[0]}</p>
+                      </div>
+                      <ArrowRight size={16} className="text-slate-300 group-hover:text-blue-600 transition" />
+                    </div>
+                  ))
+                ) : (
+                  <div className="bg-slate-50 p-8 rounded-2xl text-center border border-dashed border-slate-200">
+                    <p className="text-xs text-slate-400 font-medium">아직 기록된 활동이 없습니다.<br/>첫 학습 일지를 작성해보세요!</p>
+                  </div>
+                )}
+              </div>
+            </section>
+          </div>
+        )}
+
+        {/* TAB 2: Career Analysis */}
+        {activeTab === 'career' && (
+          <div className="space-y-6 animate-in slide-in-from-right-4">
+            <h2 className="text-xl font-black">나의 번영 리포트</h2>
+            <RadarChart data={skillData} />
+            <div className="space-y-3">
+              {careerAnalysis.map(role => (
+                <div key={role.id} className="p-5 rounded-3xl border border-slate-100 bg-white shadow-sm">
+                  <div className="flex justify-between items-center mb-2">
+                    <h4 className="font-black text-slate-800">{role.name}</h4>
+                    <span className="text-[10px] font-black text-blue-600 tracking-widest">{role.matchPercent}%</span>
+                  </div>
+                  <p className="text-xs text-slate-500 leading-relaxed mb-4">{role.desc}</p>
+                  <div className="w-full h-1 bg-slate-100 rounded-full">
+                    <div className="h-full bg-blue-600 rounded-full" style={{ width: `${role.matchPercent}%` }}></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* TAB 3: Mission */}
+        {activeTab === 'mission' && (
+          <div className="space-y-6 animate-in slide-in-from-right-4">
+            <h2 className="text-xl font-black italic">Challenges for 2026</h2>
+            {MISSIONS.map(m => (
+              <div key={m.id} className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm relative overflow-hidden">
+                <div className="absolute -right-4 -top-4 w-20 h-20 bg-amber-50 rounded-full opacity-50"></div>
+                <h3 className="font-bold text-lg mb-2 relative z-10">{m.title}</h3>
+                <p className="text-xs text-slate-500 mb-5 leading-relaxed">{m.desc}</p>
+                <button className="w-full bg-slate-900 text-white text-xs font-black py-4 rounded-2xl">
+                  프로젝트 제안서 제출
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* TAB 4: Calendar */}
+        {activeTab === 'calendar' && (
+          <div className="space-y-6 animate-in slide-in-from-right-4">
+            <h2 className="text-xl font-black">2026 자격증 일정</h2>
+            <div className="bg-slate-50 p-6 rounded-[32px] space-y-4">
+              {CALENDAR_EVENTS.map((event, idx) => (
+                <div key={idx} className="flex gap-4 items-center bg-white p-4 rounded-2xl border border-slate-100">
+                  <div className="text-center min-w-[40px]">
+                    <div className="text-[10px] font-black text-slate-300 uppercase">{event.date.split('-')[1]}월</div>
+                    <div className="text-lg font-black text-slate-800">{event.date.split('-')[2]}</div>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-slate-800">{event.title}</h4>
+                    <p className="text-[10px] text-slate-400 mt-0.5 italic">{event.org} 시험</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Upload View */}
+        {activeTab === 'upload' && (
+          <div className="bg-white p-8 rounded-[40px] shadow-2xl space-y-6 animate-in zoom-in-95">
+            <h2 className="text-2xl font-black">혁신 기록하기</h2>
+            <div className="space-y-4">
+              <input 
+                className="w-full p-4 rounded-2xl bg-slate-50 border-none text-sm font-bold focus:ring-2 focus:ring-blue-500" 
+                placeholder="어떤 가치를 만들었나요?"
+                value={newPost.title}
+                onChange={(e) => setNewPost({...newPost, title: e.target.value})}
+              />
+              <textarea 
+                className="w-full p-4 rounded-2xl bg-slate-50 border-none h-40 text-sm font-medium leading-relaxed focus:ring-2 focus:ring-blue-500" 
+                placeholder="구체적인 실습 내용을 기록해주세요."
+                value={newPost.content}
+                onChange={(e) => setNewPost({...newPost, content: e.target.value})}
+              />
+            </div>
+            <button 
+              onClick={() => {
+                if(!newPost.title) return;
+                setPosts([{id: Date.now(), title: newPost.title, content: newPost.content, date: '2026-02-18', tags: ['신규']}, ...posts]);
+                setActiveTab('home');
+                setNewPost({title: '', content: ''});
+              }}
+              className="w-full bg-blue-600 text-white font-black py-4 rounded-2xl shadow-xl shadow-blue-100 active:scale-95 transition"
+            >
+              업로드 완료
+            </button>
+          </div>
+        )}
+      </main>
+
+      {/* Simplified Bottom Nav */}
+      <nav className="fixed bottom-6 left-6 right-6 bg-white/80 backdrop-blur-xl border border-slate-100 flex justify-around p-3 rounded-[32px] max-w-md mx-auto z-20 shadow-2xl">
+        {[
+          {id: 'home', icon: LayoutGrid},
+          {id: 'career', icon: Target},
+          {id: 'mission', icon: Lightbulb},
+          {id: 'calendar', icon: Calendar}
+        ].map(tab => {
+          const Icon = tab.icon;
+          return (
+            <button 
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${activeTab === tab.id ? 'bg-blue-600 text-white scale-110 shadow-lg shadow-blue-200' : 'text-slate-300 hover:text-slate-500'}`}
+            >
+              <Icon size={20} strokeWidth={2.5} />
+            </button>
+          );
+        })}
+      </nav>
+    </div>
+  );
+}
