@@ -15,24 +15,17 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap');
         body { font-family: 'Noto Sans KR', sans-serif; }
+        .animate-fade-in { animation: fadeIn 0.3s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
-<body class="bg-slate-50">
+<body class="bg-slate-100">
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useMemo } = React;
+        const { useState, useMemo, useEffect } = React;
         
-        // Lucide Icons Wrapper for Browser
-        const Icon = ({ name, size = 20, className = "" }) => {
-            const LucideIcon = lucide.icons[name.charAt(0).toUpperCase() + name.slice(1)] || lucide.icons.HelpCircle;
-            const svg = lucide.createIcons({
-                icons: { [name]: LucideIcon },
-                attrs: { width: size, height: size, class: className, 'stroke-width': 2.5 }
-            });
-            return <i data-lucide={name} className={className} style={{width: size, height: size, display: 'inline-block'}}></i>;
-        };
-
+        // --- Constants ---
         const JOB_ROLES = [
             { id: 'iot-dev', name: 'IoT 시스템 개발자', skills: ['임베디드', '네트워크', 'C/C++', '센서제어'], desc: 'SDG 9: 사물인터넷 기술로 지능형 인프라를 구축하여 산업 효율을 높입니다.' },
             { id: 'pcb-design', name: '회로 설계 및 PCB 엔지니어', skills: ['회로이론', 'Altium/OrCAD', '전자부품이해'], desc: '지속 가능한 기술 혁신을 통해 탄력적인 산업 기반을 마련합니다.' }
@@ -40,27 +33,46 @@
 
         const SKILLS_LIST = ['임베디드', '회로이론', '네트워크', 'C/C++', '센서제어', 'PLC 제어', 'Altium/OrCAD', 'Python'];
 
+        const CALENDAR_EVENTS = [
+            { date: '2026-03-05', title: '제1회 정기 기사 필기 접수', org: 'Q-Net' },
+            { date: '2026-03-20', title: '컴퓨터활용능력 상시시험', org: '상공회의소' }
+        ];
+
+        const MISSIONS = [
+            { id: 1, title: '지속 가능한 스마트 시티 인프라', desc: '에너지 효율을 극대화하는 스마트 가로등 제어 시스템을 설계하세요.', difficulty: '중급' }
+        ];
+
         function App() {
             const [activeTab, setActiveTab] = useState('home');
             const [posts, setPosts] = useState([]);
+            const [newPost, setNewPost] = useState({ title: '', content: '' });
             const [mySkills] = useState(['임베디드', 'C/C++']);
 
-            // Simple Radar Chart Replacement
-            const skillData = useMemo(() => {
-                return SKILLS_LIST.map(s => ({
-                    name: s,
-                    value: mySkills.includes(s) ? 90 : 30
-                }));
-            }, [mySkills]);
+            // 아이콘 렌더링을 위한 훅
+            useEffect(() => {
+                if (window.lucide) {
+                    window.lucide.createIcons();
+                }
+            }, [activeTab, posts]);
 
-            React.useEffect(() => {
-                lucide.createIcons();
-            }, [activeTab]);
+            const handleUpload = () => {
+                if (!newPost.title) return;
+                const post = {
+                    id: Date.now(),
+                    title: newPost.title,
+                    content: newPost.content,
+                    date: new Date().toLocaleDateString(),
+                    tags: ['신규']
+                };
+                setPosts([post, ...posts]);
+                setNewPost({ title: '', content: '' });
+                setActiveTab('home');
+            };
 
             return (
-                <div className="min-h-screen bg-white text-slate-900 pb-24 max-w-md mx-auto shadow-2xl relative">
+                <div className="min-h-screen bg-white text-slate-900 pb-24 max-w-md mx-auto shadow-2xl relative overflow-x-hidden">
                     {/* Header */}
-                    <header className="px-6 py-6 flex justify-between items-center border-b border-slate-50">
+                    <header className="px-6 py-6 flex justify-between items-center border-b border-slate-50 bg-white sticky top-0 z-10">
                         <div>
                             <div className="flex items-center gap-2 mb-1">
                                 <div className="w-5 h-5 bg-amber-500 rounded-md flex items-center justify-center">
@@ -75,7 +87,8 @@
                         </div>
                     </header>
 
-                    <main className="p-6">
+                    <main className="p-6 animate-fade-in">
+                        {/* 탭 1: 홈 대시보드 */}
                         {activeTab === 'home' && (
                             <div className="space-y-8">
                                 <section className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-[32px] p-6 text-white shadow-xl shadow-blue-100">
@@ -94,7 +107,7 @@
                                         { id: 'mission', icon: 'lightbulb', label: '챌린지', color: 'bg-amber-50 text-amber-600' },
                                         { id: 'calendar', icon: 'calendar', label: '일정', color: 'bg-slate-50 text-slate-600' }
                                     ].map(item => (
-                                        <button key={item.id} onClick={() => setActiveTab(item.id)} className="bg-white p-5 rounded-[28px] border border-slate-100 flex flex-col items-center gap-3 active:scale-95 transition">
+                                        <button key={item.id} onClick={() => setActiveTab(item.id)} className="bg-white p-5 rounded-[28px] border border-slate-100 flex flex-col items-center gap-3 active:scale-95 transition hover:bg-slate-50">
                                             <div className={`w-12 h-12 rounded-2xl ${item.color} flex items-center justify-center`}>
                                                 <i data-lucide={item.icon}></i>
                                             </div>
@@ -102,17 +115,42 @@
                                         </button>
                                     ))}
                                 </div>
+
+                                <section>
+                                    <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 px-1">Recent Activity</h3>
+                                    {posts.length > 0 ? (
+                                        <div className="space-y-3">
+                                            {posts.map(post => (
+                                                <div key={post.id} className="bg-slate-50 p-4 rounded-2xl flex justify-between items-center">
+                                                    <div>
+                                                        <h4 className="text-sm font-bold text-slate-800">{post.title}</h4>
+                                                        <p className="text-[10px] text-slate-400 mt-0.5">{post.date}</p>
+                                                    </div>
+                                                    <i data-lucide="chevron-right" className="text-slate-300"></i>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <div className="bg-slate-50 p-8 rounded-2xl text-center border border-dashed border-slate-200">
+                                            <p className="text-xs text-slate-400 font-medium italic">아직 기록된 활동이 없습니다.</p>
+                                        </div>
+                                    )}
+                                </section>
                             </div>
                         )}
 
+                        {/* 탭 2: 진로 분석 */}
                         {activeTab === 'career' && (
                             <div className="space-y-6">
                                 <h2 className="text-xl font-black">나의 번영 리포트</h2>
+                                <div className="p-4 bg-blue-50 rounded-2xl mb-4">
+                                    <p className="text-xs text-blue-700 font-bold leading-tight">보유 기술: {mySkills.join(', ')}</p>
+                                </div>
                                 <div className="space-y-4">
                                     {JOB_ROLES.map(role => (
-                                        <div key={role.id} className="p-5 rounded-3xl border border-slate-100 bg-white">
+                                        <div key={role.id} className="p-5 rounded-3xl border border-slate-100 bg-white shadow-sm">
                                             <h4 className="font-black text-slate-800 mb-2">{role.name}</h4>
-                                            <p className="text-xs text-slate-500 mb-4">{role.desc}</p>
+                                            <p className="text-xs text-slate-500 mb-4 leading-relaxed">{role.desc}</p>
                                             <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
                                                 <div className="h-full bg-blue-600" style={{width: '75%'}}></div>
                                             </div>
@@ -121,12 +159,76 @@
                                 </div>
                             </div>
                         )}
-                        
-                        {/* More tabs can be implemented similarly */}
+
+                        {/* 탭 3: 학습 기록 업로드 */}
+                        {activeTab === 'upload' && (
+                            <div className="space-y-6">
+                                <h2 className="text-xl font-black">혁신 기록하기</h2>
+                                <div className="space-y-4">
+                                    <input 
+                                        className="w-full p-4 rounded-2xl bg-slate-50 border-none text-sm font-bold focus:ring-2 focus:ring-blue-500" 
+                                        placeholder="어떤 실습을 진행했나요?"
+                                        value={newPost.title}
+                                        onChange={(e) => setNewPost({...newPost, title: e.target.value})}
+                                    />
+                                    <textarea 
+                                        className="w-full p-4 rounded-2xl bg-slate-50 border-none h-40 text-sm font-medium focus:ring-2 focus:ring-blue-500" 
+                                        placeholder="상세 내용을 입력하세요."
+                                        value={newPost.content}
+                                        onChange={(e) => setNewPost({...newPost, content: e.target.value})}
+                                    />
+                                    <button 
+                                        onClick={handleUpload}
+                                        className="w-full bg-blue-600 text-white font-black py-4 rounded-2xl shadow-lg active:scale-95 transition"
+                                    >
+                                        기록 완료
+                                    </button>
+                                    <button onClick={() => setActiveTab('home')} className="w-full text-slate-400 text-xs font-bold">취소</button>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* 탭 4: 챌린지 */}
+                        {activeTab === 'mission' && (
+                            <div className="space-y-6">
+                                <h2 className="text-xl font-black">Prosperity Challenges</h2>
+                                {MISSIONS.map(m => (
+                                    <div key={m.id} className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm">
+                                        <h3 className="font-bold text-lg mb-2">{m.title}</h3>
+                                        <p className="text-xs text-slate-500 mb-5 leading-relaxed">{m.desc}</p>
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-[10px] font-black px-3 py-1 bg-amber-100 text-amber-700 rounded-full uppercase">{m.difficulty}</span>
+                                            <button className="text-sm font-black text-blue-600 flex items-center gap-1">시작하기 <i data-lucide="arrow-right" style={{width: 14}}></i></button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* 탭 5: 일정 */}
+                        {activeTab === 'calendar' && (
+                            <div className="space-y-6">
+                                <h2 className="text-xl font-black">주요 일정</h2>
+                                <div className="space-y-3">
+                                    {CALENDAR_EVENTS.map((event, idx) => (
+                                        <div key={idx} className="flex gap-4 items-center bg-slate-50 p-4 rounded-2xl">
+                                            <div className="text-center min-w-[50px] bg-white p-2 rounded-xl border border-slate-100 shadow-sm">
+                                                <div className="text-[10px] font-black text-blue-600 uppercase">{event.date.split('-')[1]}월</div>
+                                                <div className="text-lg font-black text-slate-800">{event.date.split('-')[2]}</div>
+                                            </div>
+                                            <div>
+                                                <h4 className="text-sm font-bold text-slate-800">{event.title}</h4>
+                                                <p className="text-[10px] text-slate-400 mt-0.5">{event.org}</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </main>
 
                     {/* Bottom Nav */}
-                    <nav className="fixed bottom-6 left-6 right-6 bg-white/80 backdrop-blur-xl border border-slate-100 flex justify-around p-3 rounded-[32px] max-w-md mx-auto shadow-2xl">
+                    <nav className="fixed bottom-6 left-6 right-6 bg-white/80 backdrop-blur-xl border border-slate-100 flex justify-around p-3 rounded-[32px] max-w-md mx-auto shadow-2xl z-20">
                         {[
                             {id: 'home', icon: 'layout-grid'},
                             {id: 'career', icon: 'target'},
@@ -134,7 +236,7 @@
                             {id: 'calendar', icon: 'calendar'}
                         ].map(tab => (
                             <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${activeTab === tab.id ? 'bg-blue-600 text-white scale-110 shadow-lg shadow-blue-200' : 'text-slate-300'}`}>
-                                <i data-lucide={tab.icon}></i>
+                                <i data-lucide={tab.icon} style={{width: 20, height: 20}}></i>
                             </button>
                         ))}
                     </nav>
